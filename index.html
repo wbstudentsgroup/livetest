@@ -71,6 +71,15 @@
 
 <div class="container">
 
+  <!-- COMING SOON / COUNTDOWN (hidden when live) -->
+  <div class="card start-screen" id="comingSoon" style="text-align:center">
+    <img src="https://i.ibb.co/mVz4Mbnh/wb-logo.jpg" alt="logo" style="max-width:100px;margin-bottom:8px" />
+    <h2 style="margin:6px 0 4px;color:var(--primary)">WB Students Group — Test Launch</h2>
+    <p class="muted" id="comingMsg">Test goes live on 27 Dec 2025 at 7:00 PM</p>
+    <div style="font-weight:700;font-size:20px;margin:12px 0" id="liveCountdown">Loading...</div>
+    <div class="muted">Please wait — the test will be available once the countdown reaches zero.</div>
+  </div>
+
   <!-- START SCREEN -->
   <div class="start-screen card" id="startScreen">
     <img src="https://i.ibb.co/mVz4Mbnh/wb-logo.jpg" alt="logo" />
@@ -145,6 +154,9 @@
     // appId: "APP_ID"
   };
 
+  // Scheduled live time for the test (local time): 27 Dec 2025 19:00
+  const LIVE_TIME = new Date(2025, 11, 27, 19, 0, 0);
+
   let useFirebase = false;
   try{
     if (firebaseConfig && firebaseConfig.apiKey) {
@@ -215,6 +227,57 @@
 
   let countdownHandle = null;
   let totalSeconds = 30 * 60;
+
+  // Live countdown (before test goes live)
+  let liveInterval = null;
+  const comingSoonEl = document.getElementById('comingSoon');
+  const liveCountdownEl = document.getElementById('liveCountdown');
+
+  function pad(n){ return n.toString().padStart(2,'0'); }
+  function formatRemainingSeconds(sec){
+    const days = Math.floor(sec/86400); sec %= 86400;
+    const hrs = Math.floor(sec/3600); sec %= 3600;
+    const mins = Math.floor(sec/60); const s = sec % 60;
+    if(days>0) return `${days}d ${pad(hrs)}:${pad(mins)}:${pad(s)}`;
+    return `${pad(hrs)}:${pad(mins)}:${pad(s)}`;
+  }
+
+  function showWhileComingSoon(){
+    comingSoonEl.style.display = 'block';
+    startScreen.style.display = 'none';
+    testScreen.style.display = 'none';
+    startBtn.disabled = true;
+  }
+
+  function revealStartScreen(){
+    if(liveInterval){ clearInterval(liveInterval); liveInterval = null; }
+    comingSoonEl.style.display = 'none';
+    startScreen.style.display = 'block';
+    testScreen.style.display = 'none';
+    startBtn.disabled = false;
+    // ensure header/test timers show default test duration
+    const m = Math.floor(totalSeconds/60); const s = totalSeconds%60;
+    const txt = `${m}:${s<10?'0':''}${s}`;
+    headerTimer.textContent = txt; timerEl.textContent = txt;
+    timerFill.style.width = '100%';
+  }
+
+  function initLiveCountdown(){
+    const now = Date.now();
+    const liveTs = LIVE_TIME.getTime();
+    if(now >= liveTs){ revealStartScreen(); return; }
+    showWhileComingSoon();
+    function tickLive(){
+      const remainingSec = Math.max(0, Math.floor((liveTs - Date.now())/1000));
+      liveCountdownEl.textContent = formatRemainingSeconds(remainingSec);
+      // show compact countdown in header as well
+      headerTimer.textContent = 'Live in ' + formatRemainingSeconds(remainingSec);
+      timerEl.textContent = headerTimer.textContent;
+      if(remainingSec <= 0){ revealStartScreen(); }
+    }
+    tickLive();
+    liveInterval = setInterval(tickLive, 1000);
+  }
 
   async function startTestFlow(){
     const mobile = (mobileInput.value || '').trim();
@@ -311,6 +374,8 @@
 
   // small intro animation on load
   window.addEventListener('load', ()=>{
+    // initialize live countdown (will reveal start screen when live)
+    try{ initLiveCountdown(); }catch(e){ console.warn('initLiveCountdown failed', e); }
     gsap.from('.card', {y:24, opacity:0, duration:0.7, ease:'power3.out', stagger:0.08});
   });
 
@@ -320,3 +385,4 @@
 </script>
 </body>
 </html>
+
