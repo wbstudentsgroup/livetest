@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>WB Students Group – Online Test</title>
+
+  <!-- GSAP for smooth animations -->
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <!-- Firebase (v8) - optional, used only if you paste firebaseConfig below -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+  <style>
+    :root{
+      --primary:#0b3c6d; --primary-2:#07406a; --accent:#ffeb3b; --muted:#6b7280;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:'Segoe UI',Arial,Helvetica,sans-serif;background:linear-gradient(135deg,#e6eef7,#ffffff);color:#222;-webkit-font-smoothing:antialiased}
+
+    /* Layout */
+    header{background:linear-gradient(90deg,var(--primary),var(--primary-2));color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+    header img{height:46px;object-fit:contain}
+
+    .container{max-width:980px;margin:20px auto;padding:0 16px}
+    .card{background:#fff;border-radius:14px;padding:22px;box-shadow:0 12px 40px rgba(2,6,23,.08)}
+
+    h1{margin:0 0 8px;text-align:center;color:var(--primary);font-size:20px}
+    .meta{display:flex;gap:12px;align-items:center;justify-content:center;margin-bottom:12px}
+    .timer{background:var(--accent);color:#000;padding:6px 12px;border-radius:999px;font-weight:700;min-width:88px;text-align:center}
+
+    .info{background:#eef6fb;border-radius:10px;padding:12px 14px;margin-bottom:14px;color:#153e60}
+    .info ul{margin:0;padding-left:18px}
+
+    .paper-wrap{border-radius:12px;overflow:hidden;border:1px solid #e1e8f0;background:#fafafa;transition:transform .35s}
+    .paper-wrap:hover{transform:translateY(-4px)}
+    .paper-wrap img{width:100%;height:auto;display:block}
+
+    .hint{font-size:13px;color:#555;text-align:center;margin-top:8px}
+
+    .actions{display:flex;justify-content:center;margin-top:18px}
+    button{background:var(--primary);color:#fff;border:none;padding:12px 20px;font-size:15px;border-radius:10px;cursor:pointer;box-shadow:0 10px 24px rgba(11,60,109,0.12);transition:transform .18s}
+    button:active{transform:translateY(1px)}
+
+    /* Start screen */
+    .start-screen{max-width:480px;margin:72px auto;padding:28px;border-radius:16px;text-align:center}
+    .start-screen img{max-width:120px;margin-bottom:10px}
+    .start-screen input{width:100%;padding:12px;border-radius:10px;border:1px solid #d3dbe6;font-size:15px;margin:14px 0}
+    .muted{color:var(--muted);font-size:13px;margin-top:10px}
+
+    /* Modal */
+    .modal-backdrop{position:fixed;inset:0;background:rgba(2,6,23,0.45);display:flex;align-items:center;justify-content:center;z-index:999}
+    .modal{background:#fff;padding:18px;border-radius:12px;max-width:420px;width:92%;box-shadow:0 18px 48px rgba(2,6,23,.2);text-align:center}
+    .modal h3{margin:6px 0 8px;color:var(--primary)}
+
+    /* Timer progress */
+    .timer-bar{height:10px;background:#eef6fb;border-radius:999px;overflow:hidden;margin-top:10px}
+    .timer-bar > i{display:block;height:100%;background:linear-gradient(90deg,var(--primary),var(--primary-2));width:100%;transition:width 1s linear}
+
+    footer{margin:18px 0;text-align:center;color:#6b7280;font-size:13px}
+
+    @media(max-width:600px){header{flex-direction:row-reverse}h1{font-size:18px}.container{margin:8px auto}}
+  </style>
+</head>
+<body>
+
+<header>
+  <img src="https://i.ibb.co/mVz4Mbnh/wb-logo.jpg" alt="WB Students Group" />
+  <div class="timer" id="headerTimer">30:00</div>
+</header>
+
+<div class="container">
+
+  <!-- START SCREEN -->
+  <div class="start-screen card" id="startScreen">
+    <img src="https://i.ibb.co/mVz4Mbnh/wb-logo.jpg" alt="logo" />
+    <h2 style="margin:6px 0 4px;color:var(--primary)">WB Students Group Online Test</h2>
+    <p class="muted">Enter your mobile number to start. One number = one attempt.</p>
+
+    <input id="mobileInput" type="tel" inputmode="numeric" placeholder="Enter 10-digit mobile number" maxlength="10" />
+    <div style="display:flex;gap:10px;justify-content:center;margin-top:8px">
+      <button id="startBtn">Start Test</button>
+    </div>
+    <div class="muted">If you need to test repeatedly for development, clear local storage or use another browser/incognito.</div>
+  </div>
+
+  <!-- TEST SCREEN -->
+  <div id="testScreen" class="card" style="display:none">
+    <h1>WB Students Group — Online Test</h1>
+
+    <div class="meta">
+      <div style="text-align:center">
+        <div class="timer" id="timer">30:00</div>
+        <div class="timer-bar" aria-hidden="true"><i id="timerFill"></i></div>
+      </div>
+    </div>
+
+    <div class="info">
+      <ul>
+        <li><strong>Duration:</strong> 30 minutes</li>
+        <li><strong>Attempt:</strong> One mobile number = one attempt only</li>
+        <li>Please do not refresh or close the page during the test</li>
+      </ul>
+    </div>
+
+    <div class="paper-wrap" id="paperWrap">
+      <img id="paperImg" src="https://i.ibb.co/v6BjKmK7/photo-2025-12-27-13-09-20.jpg" alt="Question Paper" />
+    </div>
+    <div class="hint">Tip: pinch-to-zoom on mobile or rotate to landscape for easier reading.</div>
+
+    <div class="actions"><button id="submitBtn">Submit Test</button></div>
+  </div>
+
+  <footer>© 2025 WB Students Group | Secure Online Examination</footer>
+</div>
+
+<!-- MODAL -->
+<div id="modalBackdrop" class="modal-backdrop" style="display:none">
+  <div class="modal">
+    <h3 id="modalTitle">Notice</h3>
+    <p id="modalMessage">Message</p>
+    <div style="display:flex;gap:10px;justify-content:center;margin-top:12px">
+      <button class="btn-muted" id="modalCancel">Cancel</button>
+      <button id="modalAction" style="background:var(--primary);color:#fff;padding:8px 12px;border-radius:8px;border:none">OK</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  /* ==========================
+     Configuration (change these)
+     ========================== */
+  const SURVEY_URL = 'https://surveyheart.com/form/692322f80a0bd8c6f8ad7ca0';
+
+  // --------- Firebase config (optional) ---------
+  // If you want server-side lock that works across devices,
+  // create a Firebase project and paste your config below.
+  // If left empty, the code will fall back to localStorage.
+  const firebaseConfig = {
+    // apiKey: "YOUR_API_KEY",
+    // authDomain: "YOUR_PROJECT.firebaseapp.com",
+    // projectId: "YOUR_PROJECT",
+    // storageBucket: "YOUR_PROJECT.appspot.com",
+    // messagingSenderId: "SENDER_ID",
+    // appId: "APP_ID"
+  };
+
+  let useFirebase = false;
+  try{
+    if (firebaseConfig && firebaseConfig.apiKey) {
+      firebase.initializeApp(firebaseConfig);
+      window.db = firebase.firestore();
+      useFirebase = true;
+      console.log('Firebase initialized — server-side lock enabled');
+    }
+  }catch(e){ console.warn('Firebase init failed, falling back to localStorage', e); useFirebase=false }
+
+  /* ==========================
+     Small helpers: modal + storage
+     ========================== */
+  const modalBackdrop = document.getElementById('modalBackdrop');
+  const modalTitle = document.getElementById('modalTitle');
+  const modalMessage = document.getElementById('modalMessage');
+  const modalAction = document.getElementById('modalAction');
+  const modalCancel = document.getElementById('modalCancel');
+
+  function showModal(title, message, actionText, actionFn){
+    modalTitle.textContent = title;
+    modalMessage.textContent = message;
+    modalAction.textContent = actionText || 'OK';
+    modalAction.onclick = ()=>{ modalBackdrop.style.display='none'; actionFn && actionFn(); };
+    modalCancel.onclick = ()=>{ modalBackdrop.style.display='none'; };
+    modalBackdrop.style.display = 'flex';
+  }
+
+  function getAttempts(){
+    try{ return JSON.parse(localStorage.getItem('wb_attempts')||'{}'); } catch(e){ return {}; }
+  }
+  function saveAttempts(obj){ localStorage.setItem('wb_attempts', JSON.stringify(obj)); }
+
+  /* ==========================
+     Server-side check + fallback
+     ========================== */
+  async function checkAndLockNumber(mobile){
+    // If firebase is configured -> use Firestore (document per mobile)
+    if(useFirebase && window.db){
+      try{
+        const ref = db.collection('attempts').doc(mobile);
+        const snap = await ref.get();
+        if(snap.exists){ return false; }
+        await ref.set({ attemptedAt: firebase.firestore.FieldValue.serverTimestamp() });
+        return true;
+      }catch(e){ console.warn('Firestore check failed, falling back to localStorage', e); }
+    }
+
+    // Fallback: localStorage per-browser (not device-proof)
+    const attempts = getAttempts();
+    if(attempts[mobile]) return false;
+    attempts[mobile] = { time: new Date().toISOString() };
+    saveAttempts(attempts);
+    return true;
+  }
+
+  /* ==========================
+     UI & Timer logic
+     ========================== */
+  const startScreen = document.getElementById('startScreen');
+  const testScreen = document.getElementById('testScreen');
+  const startBtn = document.getElementById('startBtn');
+  const submitBtn = document.getElementById('submitBtn');
+  const mobileInput = document.getElementById('mobileInput');
+  const timerEl = document.getElementById('timer');
+  const headerTimer = document.getElementById('headerTimer');
+  const timerFill = document.getElementById('timerFill');
+
+  let countdownHandle = null;
+  let totalSeconds = 30 * 60;
+
+  async function startTestFlow(){
+    const mobile = (mobileInput.value || '').trim();
+    if(!/^\d{10}$/.test(mobile)){
+      showModal('Invalid number','Please enter a valid 10-digit mobile number','OK');
+      return;
+    }
+
+    // prevent double-start on same browser session
+    if(sessionStorage.getItem('wb_in_test')){
+      showModal('Test in progress','A test is already in progress in this browser.','OK');
+      return;
+    }
+
+    // server-side check or fallback
+    startBtn.disabled = true; startBtn.textContent = 'Checking...';
+    const allowed = await checkAndLockNumber(mobile);
+    startBtn.disabled = false; startBtn.textContent = 'Start Test';
+
+    if(!allowed){
+      showModal('Already enrolled','You have already enrolled for this test with this number. Multiple attempts are not allowed.','Go to Submit', ()=>{ window.location.href = SURVEY_URL; });
+      return;
+    }
+
+    // mark session in-progress
+    sessionStorage.setItem('wb_in_test','true');
+    sessionStorage.setItem('wb_current_mobile', mobile);
+
+    // smooth transition using GSAP
+    gsap.to(startScreen, {opacity:0, y:-24, duration:0.45, ease:'power2.inOut', onComplete: ()=>{
+      startScreen.style.display='none';
+      testScreen.style.display='block';
+      gsap.from(testScreen, {opacity:0, y:18, duration:0.5, ease:'power3.out'});
+    }});
+
+    // start timer
+    startTimer(totalSeconds);
+  }
+
+  function startTimer(seconds){
+    clearInterval(countdownHandle);
+    const startTime = Date.now();
+    const total = seconds;
+
+    function tick(){
+      const elapsed = Math.floor((Date.now() - startTime)/1000);
+      const remaining = Math.max(total - elapsed, 0);
+      const m = Math.floor(remaining/60); const s = remaining%60;
+      const txt = `${m}:${s<10?'0':''}${s}`;
+      timerEl.textContent = txt; headerTimer.textContent = txt;
+      const pct = Math.max(0, (remaining/total)*100);
+      timerFill.style.width = pct + '%';
+      if(remaining <= 60) timerEl.classList.add('warning');
+      if(remaining <= 0){ clearInterval(countdownHandle); doSubmit(); }
+    }
+
+    tick();
+    countdownHandle = setInterval(tick, 1000);
+  }
+
+  function showSubmitConfirm(){
+    showModal('Submit test','Are you sure you want to submit now?','Submit', ()=>{ doSubmit(); });
+  }
+
+  async function doSubmit(){
+    clearInterval(countdownHandle);
+    const mobile = sessionStorage.getItem('wb_current_mobile');
+
+    // ensure server-side mark exists (if firebase enabled and earlier failed)
+    if(mobile && useFirebase && window.db){
+      try{ await db.collection('attempts').doc(mobile).set({ submittedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge:true }); }
+      catch(e){ console.warn('Could not write final submit to Firestore', e); }
+    }
+
+    // also keep local record for fallback
+    if(mobile){ const attempts = getAttempts(); attempts[mobile] = { time: new Date().toISOString(), submitted:true }; saveAttempts(attempts); }
+
+    sessionStorage.removeItem('wb_in_test');
+    sessionStorage.removeItem('wb_current_mobile');
+
+    // redirect to survey/submit page
+    window.location.href = SURVEY_URL;
+  }
+
+  // Attach events
+  startBtn.addEventListener('click', startTestFlow);
+  submitBtn.addEventListener('click', ()=> showSubmitConfirm());
+
+  // allow pressing Enter on mobile input to start
+  mobileInput.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') startTestFlow(); });
+
+  // accessibility: close modal on Escape
+  document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape'){ document.getElementById('modalBackdrop').style.display='none'; }});
+
+  // small intro animation on load
+  window.addEventListener('load', ()=>{
+    gsap.from('.card', {y:24, opacity:0, duration:0.7, ease:'power3.out', stagger:0.08});
+  });
+
+  // Developer helper (uncomment for testing) - clears attempts easily
+  // function clearAttemptsForTesting(){ localStorage.removeItem('wb_attempts'); sessionStorage.removeItem('wb_in_test'); sessionStorage.removeItem('wb_current_mobile'); }
+
+</script>
+</body>
+</html>
