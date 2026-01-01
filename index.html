@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>WB Students Group – Online Test</title>
 
+  <!-- Premium font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
   <!-- GSAP for smooth animations -->
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
   <!-- Firebase (v8) - optional, used only if you paste firebaseConfig below -->
@@ -12,61 +15,172 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
   <style>
+    /* Premium styles: Inter font, refined shadows and subtle motion */
     :root{
-      --primary:#0b3c6d; --primary-2:#07406a; --accent:#ffeb3b; --muted:#6b7280;
+      --primary:#0b3c6d;
+      --primary-2:#07406a;
+      --accent:#ffd54f;
+      --muted:#475569;
+      --bg-1:#eef6fb;
+      --card-bg:linear-gradient(180deg,#ffffff,#fbfdff);
+      --danger:#dc2626;
+      --shadow-soft: 0 8px 30px rgba(2,6,23,.08);
+      --shadow-strong: 0 20px 50px rgba(2,6,23,.12);
+      --radius:14px;
+      --glass: rgba(255,255,255,0.6);
+      --toast-bg: rgba(8,16,41,0.96);
     }
+
     *{box-sizing:border-box}
-    body{margin:0;font-family:'Segoe UI',Arial,Helvetica,sans-serif;background:linear-gradient(135deg,#e6eef7,#ffffff);color:#222;-webkit-font-smoothing:antialiased}
+    html,body{height:100%}
+    body{
+      margin:0;font-family:Inter,system-ui,-apple-system,'Segoe UI',Arial,Helvetica,sans-serif;background:radial-gradient(1200px 400px at 10% 10%, rgba(11,60,109,0.06), transparent), linear-gradient(135deg,var(--bg-1),#ffffff);color:#081029;-webkit-font-smoothing:antialiased;line-height:1.45;font-size:15px;
+    }
 
-    /* Layout */
-    header{background:linear-gradient(90deg,var(--primary),var(--primary-2));color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px}
-    header img{height:46px;object-fit:contain}
+    /* Header */
+    header{background:linear-gradient(90deg,var(--primary),var(--primary-2));color:#fff;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid rgba(255,255,255,0.06);backdrop-filter: blur(4px);}
+    header img{height:48px;object-fit:contain;border-radius:8px;box-shadow:0 6px 22px rgba(2,6,23,0.14)}
 
-    .container{max-width:980px;margin:20px auto;padding:0 16px}
-    .card{background:#fff;border-radius:14px;padding:22px;box-shadow:0 12px 40px rgba(2,6,23,.08)}
+    .container{max-width:980px;margin:28px auto;padding:0 16px}
+    .card{background:var(--card-bg);border-radius:var(--radius);padding:26px;box-shadow:var(--shadow-soft);transition:transform .45s cubic-bezier(.2,.9,.2,1),box-shadow .25s}
+    .card:hover{transform:translateY(-6px);box-shadow:var(--shadow-strong)}
 
     h1{margin:0 0 8px;text-align:center;color:var(--primary);font-size:20px}
-    .meta{display:flex;gap:12px;align-items:center;justify-content:center;margin-bottom:12px}
-    .timer{background:var(--accent);color:#000;padding:6px 12px;border-radius:999px;font-weight:700;min-width:88px;text-align:center}
 
-    .info{background:#eef6fb;border-radius:10px;padding:12px 14px;margin-bottom:14px;color:#153e60}
+    .meta{display:flex;gap:12px;align-items:center;justify-content:center;margin-bottom:12px}
+
+    .timer{background:#fff;color:var(--primary);padding:10px 16px;border-radius:999px;font-weight:800;min-width:110px;text-align:center;box-shadow:0 8px 26px rgba(11,60,109,0.08);font-variant-numeric:tabular-nums;letter-spacing:0.4px}
+    .timer.warning{background: linear-gradient(90deg,#fff6dd,#ffe0b2);color:var(--danger);font-weight:900;box-shadow:0 8px 18px rgba(220,38,38,0.08)}
+
+    /* Live countdown enhanced styles */
+    .live-countdown{display:inline-flex;align-items:center;gap:10px;font-weight:800;color:var(--primary);background:rgba(255,255,255,0.98);padding:8px 12px;border-radius:10px;box-shadow:0 10px 26px rgba(11,60,109,0.06);}
+    .time-chip{background:linear-gradient(90deg,#fff7e6,#fff4d9);color:#0b3c6d;padding:6px 8px;border-radius:8px;font-weight:800;font-size:13px}
+    .time-block{font-variant-numeric:tabular-nums;font-size:16px;letter-spacing:0.6px}
+    .time-block.large{font-size:18px}
+
+    /* subtle live pulse when waiting */
+    .live-pulse{animation:livePulse 2.8s ease-in-out infinite}
+    @keyframes livePulse{0%{box-shadow:0 8px 18px rgba(11,60,109,0.06)}50%{box-shadow:0 20px 46px rgba(11,60,109,0.12)}100%{box-shadow:0 8px 18px rgba(11,60,109,0.06)}}
+
+    .info{background:linear-gradient(180deg,#f6fbff,#eef6fb);border-radius:12px;padding:14px 16px;margin-bottom:16px;color:#0f3a57}
     .info ul{margin:0;padding-left:18px}
 
-    .paper-wrap{border-radius:12px;overflow:hidden;border:1px solid #e1e8f0;background:#fafafa;transition:transform .35s}
-    .paper-wrap:hover{transform:translateY(-4px)}
-    .paper-wrap img{width:100%;height:auto;display:block}
+    /* Paper with subtle 3D and floating animation */
+    /* Flip card + paper */
+    .flip-card{perspective:1200px;display:block;max-width:900px;margin:0 auto}
+    .flip-inner{position:relative;transition:transform .7s cubic-bezier(.2,.9,.2,1);transform-style:preserve-3d}
+    .flip-inner.is-flipped{transform:rotateY(180deg)}
 
-    .hint{font-size:13px;color:#555;text-align:center;margin-top:8px}
+    .paper-wrap, .flip-back{border-radius:14px;overflow:hidden;border:1px solid rgba(11,60,109,0.04);background:linear-gradient(180deg,#ffffff,#fbfcff);backface-visibility:hidden;min-height:220px}
+    .paper-wrap img{width:100%;height:auto;display:block;transform-origin:center;will-change:transform}
+
+    .flip-back{position:absolute;inset:0;padding:22px;display:flex;align-items:center;justify-content:center;transform:rotateY(180deg)}
+    .back-content{max-width:420px;text-align:center;color:#0f1724}
+    .back-content p{margin:0;color:var(--muted)}
+
+    /* visual cue that flip is available */
+    .flip-card[tabindex="0"]:focus{outline:3px solid rgba(7,64,106,0.12);outline-offset:6px}
+    .flip-hint{font-size:12px;color:var(--muted);margin-top:8px;text-align:center}
+
+    /* disable 3d motion for reduced motion users */
+    @media (prefers-reduced-motion: reduce){
+      .flip-inner{transition:none}
+    }
+
+    .hint{font-size:13px;color:var(--muted);text-align:center;margin-top:10px}
 
     .actions{display:flex;justify-content:center;margin-top:18px}
-    button{background:var(--primary);color:#fff;border:none;padding:12px 20px;font-size:15px;border-radius:10px;cursor:pointer;box-shadow:0 10px 24px rgba(11,60,109,0.12);transition:transform .18s}
+    button{position:relative;overflow:hidden;background:linear-gradient(90deg,var(--primary),var(--primary-2));color:#fff;border:none;padding:12px 20px;font-size:15px;border-radius:12px;cursor:pointer;box-shadow:0 14px 36px rgba(11,60,109,0.12);transition:transform .18s cubic-bezier(.2,.9,.2,1),box-shadow .18s}
     button:active{transform:translateY(1px)}
+    button:focus{outline:3px solid rgba(7,64,106,0.12);outline-offset:3px}
 
-    /* Start screen */
-    .start-screen{max-width:480px;margin:72px auto;padding:28px;border-radius:16px;text-align:center}
-    .start-screen img{max-width:120px;margin-bottom:10px}
-    .start-screen input{width:100%;padding:12px;border-radius:10px;border:1px solid #d3dbe6;font-size:15px;margin:14px 0}
+    .btn-muted{background:#f8fafc;color:#0f1724;border-radius:10px;padding:10px 14px;border:1px solid #e6eef7}
+
+    .btn-primary{border-radius:12px;padding:12px 22px}
+    button[disabled]{opacity:0.6;cursor:not-allowed;box-shadow:none;transform:none}
+
+    .start-screen{max-width:520px;margin:48px auto;padding:32px;border-radius:18px;text-align:center}
+    .start-screen img{max-width:120px;margin-bottom:14px;filter:drop-shadow(0 8px 18px rgba(11,60,109,0.12))}
+    .start-screen input{width:100%;padding:12px;border-radius:12px;border:1px solid #dfeaf6;font-size:15px;margin:14px 0;transition:box-shadow .14s;box-shadow:inset 0 -2px 0 rgba(11,60,109,0.02)}
+    .start-screen input:focus{box-shadow:0 10px 28px rgba(7,64,106,0.06);outline:none;border-color:var(--primary)}
+
     .muted{color:var(--muted);font-size:13px;margin-top:10px}
 
-    /* Modal */
+    /* Modal tweaks */
     .modal-backdrop{position:fixed;inset:0;background:rgba(2,6,23,0.45);display:flex;align-items:center;justify-content:center;z-index:999}
-    .modal{background:#fff;padding:18px;border-radius:12px;max-width:420px;width:92%;box-shadow:0 18px 48px rgba(2,6,23,.2);text-align:center}
+    .modal{background:linear-gradient(180deg,#fff,#fbfcff);padding:18px;border-radius:12px;max-width:420px;width:92%;box-shadow:0 22px 60px rgba(2,6,23,.18);text-align:center}
     .modal h3{margin:6px 0 8px;color:var(--primary)}
 
-    /* Timer progress */
-    .timer-bar{height:10px;background:#eef6fb;border-radius:999px;overflow:hidden;margin-top:10px}
-    .timer-bar > i{display:block;height:100%;background:linear-gradient(90deg,var(--primary),var(--primary-2));width:100%;transition:width 1s linear}
-
+    .visually-hidden{position:absolute!important;height:1px;width:1px;overflow:hidden;clip:rect(1px,1px,1px,1px);white-space:nowrap}
     footer{margin:18px 0;text-align:center;color:#6b7280;font-size:13px}
 
-    @media(max-width:600px){header{flex-direction:row-reverse}h1{font-size:18px}.container{margin:8px auto}}
+    /* Timer bar */
+    .timer-bar{height:12px;background:linear-gradient(90deg,#eef6fb,#ffffff);border-radius:999px;overflow:hidden;margin-top:8px;box-shadow:inset 0 -6px 24px rgba(11,60,109,0.03)}
+    .timer-bar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,var(--accent),#ffb74d);transition:width 0.6s ease}
+
+    /* Toasts */
+    .toast-container{position:fixed;top:18px;right:18px;z-index:1100;display:flex;flex-direction:column;gap:10px;pointer-events:none}
+    .toast{background:var(--toast-bg);color:#fff;padding:10px 14px;border-radius:10px;box-shadow:0 12px 36px rgba(2,6,23,0.25);min-width:200px;pointer-events:auto;font-weight:600}
+    .toast.success{background:linear-gradient(90deg,#10b981,#0ea5a0)}
+    .toast.error{background:linear-gradient(90deg,#ef4444,#f97316)}
+
+    /* Overlay (waiting) */
+    .overlay{position:fixed;inset:0;background:linear-gradient(180deg,rgba(2,6,23,0.6),rgba(2,6,23,0.72));display:flex;align-items:center;justify-content:center;z-index:1099;opacity:0;pointer-events:none;transition:opacity .22s ease}
+    .overlay[aria-hidden="false"]{opacity:1;pointer-events:auto}
+    .overlay-content{display:flex;flex-direction:column;align-items:center;gap:10px}
+    .spinner{animation:spin 1s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* Small animations */
+    @keyframes floaty{0%{transform:translateY(0)}50%{transform:translateY(-6px)}100%{transform:translateY(0)}}
+    .subtle-float{animation:floaty 6s ease-in-out infinite}
+
+    /* Panda mascot styles */
+    .panda-wrapper{display:inline-flex;align-items:center;gap:8px;margin-right:6px}
+    .panda-svg{width:110px;height:110px;display:block}
+    .panda-group{transform-origin:center center}
+    .arm-left-g, .arm-right-g{transform-box:fill-box;}
+    .arm-left-g{transform-origin:24px 62px}
+    .arm-right-g{transform-origin:72px 62px}
+    .arm-left-g, .arm-right-g, .arm-right-wrist{transform-box:fill-box}
+    .arm-right-wrist{transform-origin:86px 74px}
+    .pupil-left,.pupil-right{transform-origin:center;will-change:transform}
+    .speech-bubble{background:linear-gradient(180deg,#fff7fd,#fff1fb);color:#0b3c6d;padding:8px 12px;border-radius:18px;border:1px solid rgba(11,60,109,0.04);box-shadow:0 10px 30px rgba(11,60,109,0.06);font-weight:700;font-size:13px;display:inline-block;margin-left:8px;position:relative}
+    .panda-breathe{animation:breathe 1.4s ease-in-out infinite}
+    @keyframes breathe{0%{transform:translateY(0)}50%{transform:translateY(-4px)}100%{transform:translateY(0)}}
+    .panda-walking .leg-left, .panda-walking .leg-right{will-change:transform}
+
+
+    /* Respect reduced motion */
+    @media (prefers-reduced-motion: reduce){
+      .subtle-float, .card, .paper-wrap, .modal, .toast{animation:none;transition:none}
+      *{animation-duration:0.001ms!important;animation-iteration-count:1!important;transition-duration:0.001ms!important}
+    }
+
+    @media(max-width:600px){
+      header{flex-direction:row-reverse;padding:12px}
+      h1{font-size:18px}
+      .container{margin:8px auto}
+      .timer{min-width:80px;padding:8px 10px}
+      .start-screen{margin:28px auto;padding:20px}
+      .timer-bar{height:8px}
+      .toast-container{left:12px;right:12px;top:12px}
+    }
   </style>
 </head>
 <body>
+  <div id="toastContainer" aria-live="polite" aria-atomic="true" class="toast-container"></div>
+
+  <div id="overlay" class="overlay" aria-hidden="true">
+    <div class="overlay-content" role="status" aria-live="polite">
+      <svg class="spinner" viewBox="0 0 50 50" width="48" height="48" aria-hidden="true"><circle cx="25" cy="25" r="20" fill="none" stroke="rgba(255,255,255,0.95)" stroke-width="4" stroke-linecap="round" stroke-dasharray="31.415,31.415"/></svg>
+      <div id="overlayMessage" style="margin-top:10px;color:#fff;font-weight:600">Checking...</div>
+    </div>
+  </div>
 
 <header>
   <img src="https://i.ibb.co/mVz4Mbnh/wb-logo.jpg" alt="WB Students Group" />
-  <div class="timer" id="headerTimer">30:00</div>
+  <div class="timer" id="headerTimer" role="status" aria-live="polite">30:00</div>
 </header>
 
 <div class="container">
@@ -75,8 +189,71 @@
   <div class="card start-screen" id="comingSoon" style="text-align:center">
     <img src="https://i.ibb.co/mVz4Mbnh/wb-logo.jpg" alt="logo" style="max-width:100px;margin-bottom:8px" />
     <h2 style="margin:6px 0 4px;color:var(--primary)">WB Students Group — Test Launch</h2>
-    <p class="muted" id="comingMsg">Test goes live on 27 Dec 2025 at 7:00 PM</p>
-    <div style="font-weight:700;font-size:20px;margin:12px 0" id="liveCountdown">Loading...</div>
+    <p class="muted" id="comingMsg"><span class="icon" aria-hidden="true">📅</span> <strong>Test goes live</strong> on <span id="comingDate">04 Jan 2026 at 7:00 PM</span></p>
+    <div style="font-weight:700;font-size:20px;margin:12px 0;display:flex;align-items:center;justify-content:center;gap:12px" id="liveCountdownWrap" role="status" aria-live="polite">
+      <div class="panda-wrapper" id="pandaWrapper" aria-hidden="true">
+        <svg class="panda-svg" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+          <defs>
+            <radialGradient id="bodyGrad" cx="50%" cy="40%" r="60%">
+              <stop offset="0%" stop-color="#2b2b2b" />
+              <stop offset="70%" stop-color="#111213" />
+            </radialGradient>
+            <linearGradient id="shine" x1="0" x2="1">
+              <stop offset="0%" stop-color="#ffffff" stop-opacity="0.06" />
+              <stop offset="100%" stop-color="#ffffff" stop-opacity="0.01" />
+            </linearGradient>
+            <filter id="softShadow" x="-50%" y="-50%" width="200%" height="200%">
+              <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#000" flood-opacity="0.18" />
+            </filter>
+          </defs>
+          <g class="panda-group" id="pandaGroup" filter="url(#softShadow)">
+            <!-- ground shadow -->
+            <ellipse cx="60" cy="98" rx="32" ry="6" fill="rgba(2,6,23,0.12)"/>
+            <!-- body (dark with softer tones) -->
+            <ellipse cx="60" cy="66" rx="28" ry="28" fill="url(#bodyGrad)" stroke="#222" stroke-width="0.6"/>
+            <!-- subtle glossy highlight -->
+            <ellipse cx="50" cy="58" rx="16" ry="8" fill="url(#shine)" />
+            <!-- slightly larger white belly for better contrast with site -->
+            <ellipse cx="60" cy="72" rx="12" ry="8" fill="#ffffff" opacity="0.22" />
+            <!-- arms (soft dark for better contrast) -->
+            <g class="arm-left-g">
+              <path class="arm-left" d="M36 62c-6 8-6 18 2 24" stroke="#2b2b2b" stroke-width="6" stroke-linecap="round" fill="none"/>
+            </g>
+            <g class="arm-right-g">
+              <g class="arm-right-wrist">
+                <path class="arm-right" d="M84 62c6 8 6 18-2 24" stroke="#2b2b2b" stroke-width="6" stroke-linecap="round" fill="none"/>
+              </g>
+            </g>
+
+            <!-- head: dark but softened, with a slightly larger face patch -->
+            <circle cx="60" cy="34" r="20" fill="#222425" stroke="#0f0f0f" stroke-width="0.6"/>
+            <!-- slightly larger white face patch for friendlier look -->
+            <ellipse cx="60" cy="36" rx="11" ry="8" fill="#ffffff" opacity="0.96" />
+            <!-- ears (soft dark) with pink inner) -->
+            <circle cx="44" cy="18" r="7" fill="#1b1b1b"/>
+            <circle cx="76" cy="18" r="7" fill="#1b1b1b"/>
+            <!-- eye patches (dark subtle) -->
+            <path d="M48 30c-6 4-8 10-3 15" fill="#0b0b0b"/>
+            <path d="M72 30c6 4 8 10 3 15" fill="#0b0b0b"/>
+            <!-- pupils: dark with tiny white highlight -->
+            <circle cx="50" cy="34" r="3" class="pupil-left" fill="#0a0a0a" />
+            <circle cx="70" cy="34" r="3" class="pupil-right" fill="#0a0a0a" />
+            <circle cx="51.2" cy="33.2" r="0.9" fill="#fff" opacity="0.9" />
+            <circle cx="71.2" cy="33.2" r="0.9" fill="#fff" opacity="0.9" />
+            <!-- mouth and smile (light) -->
+            <ellipse cx="60" cy="42" rx="4" ry="3" fill="#111" class="panda-mouth" />
+            <path d="M54 46c1.6 1.6 9 1.6 10.6 0" stroke="#111" stroke-width="1.2" stroke-linecap="round" fill="none" class="panda-smile"/>
+            <!-- legs (dark with softened tone) -->
+            <path class="leg-left" d="M48 88c-2 2-6 4-8 2" stroke="#222" stroke-width="5" stroke-linecap="round" fill="none"/>
+            <path class="leg-right" d="M72 88c2 2 6 4 8 2" stroke="#222" stroke-width="5" stroke-linecap="round" fill="none"/>
+          </g>
+        </svg>
+      </div>
+      <div class="panda-speech-wrap" aria-hidden="true">
+        <div id="pandaSpeech" class="speech-bubble" style="opacity:0;transform:translateY(-6px) scale(0.94);">Hello!</div>
+      </div>
+      <div id="liveCountdown" class="live-countdown" style="min-width:220px;text-align:center">Loading...</div>
+    </div>
     <div class="muted">Please wait — the test will be available once the countdown reaches zero.</div>
   </div>
 
@@ -86,9 +263,9 @@
     <h2 style="margin:6px 0 4px;color:var(--primary)">WB Students Group Online Test</h2>
     <p class="muted">Enter your mobile number to start. One number = one attempt.</p>
 
-    <input id="mobileInput" type="tel" inputmode="numeric" placeholder="Enter 10-digit mobile number" maxlength="10" />
+    <input id="mobileInput" name="mobile" type="tel" inputmode="numeric" placeholder="Enter 10-digit mobile number" maxlength="10" aria-label="10-digit mobile number" required />
     <div style="display:flex;gap:10px;justify-content:center;margin-top:8px">
-      <button id="startBtn">Start Test</button>
+      <button id="startBtn" class="btn-primary" aria-label="Start test">Start Test</button>
     </div>
     <div class="muted">If you need to test repeatedly for development, clear local storage or use another browser/incognito.</div>
   </div>
@@ -112,25 +289,40 @@
       </ul>
     </div>
 
-    <div class="paper-wrap" id="paperWrap">
-      <img id="paperImg" src="https://i.ibb.co/v6BjKmK7/photo-2025-12-27-13-09-20.jpg" alt="Question Paper" />
+    <div class="flip-card" id="paperFlip" tabindex="0" role="button" aria-pressed="false" aria-label="Toggle paper preview">
+      <div class="flip-inner" id="flipInner">
+        <div class="flip-front paper-wrap" id="paperWrap">
+          <img id="paperImg" src="https://i.ibb.co/xtV5CVB9/Whats-App-Image-2026-01-01-at-9-38-38-PM.jpg" alt="Question Paper" />
+        </div>
+        <div class="flip-back" id="paperBack" aria-hidden="true">
+          <div class="back-content">
+            <h4 style="margin:0 0 8px;color:var(--primary)">Paper details</h4>
+            <p>Tip: pinch-to-zoom or rotate to landscape for easier reading.</p>
+            <p style="margin-top:10px;color:var(--muted)">Click <strong>Back</strong> or press <kbd>Enter</kbd> to return.</p>
+            <div style="display:flex;gap:8px;justify-content:center;margin-top:12px">
+              <button id="downloadPaper" class="btn-muted">Download</button>
+              <button id="flipClose" class="btn-primary">Back</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
     <div class="hint">Tip: pinch-to-zoom on mobile or rotate to landscape for easier reading.</div>
 
-    <div class="actions"><button id="submitBtn">Submit Test</button></div>
+    <div class="actions"><button id="submitBtn" class="btn-primary" aria-label="Submit test">Submit Test</button></div>
   </div>
 
-  <footer>© 2025 WB Students Group | Secure Online Examination</footer>
+  <footer>© 2026 WB Students Group | Secure Online Examination</footer>
 </div>
 
 <!-- MODAL -->
-<div id="modalBackdrop" class="modal-backdrop" style="display:none">
-  <div class="modal">
+<div id="modalBackdrop" class="modal-backdrop" style="display:none" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-describedby="modalMessage" tabindex="-1">
     <h3 id="modalTitle">Notice</h3>
     <p id="modalMessage">Message</p>
     <div style="display:flex;gap:10px;justify-content:center;margin-top:12px">
       <button class="btn-muted" id="modalCancel">Cancel</button>
-      <button id="modalAction" style="background:var(--primary);color:#fff;padding:8px 12px;border-radius:8px;border:none">OK</button>
+      <button id="modalAction" class="btn-primary" style="padding:8px 12px;border-radius:8px;border:none">OK</button>
     </div>
   </div>
 </div>
@@ -154,8 +346,8 @@
     // appId: "APP_ID"
   };
 
-  // Scheduled live time for the test (local time): 27 Dec 2025 19:00
-  const LIVE_TIME = new Date(2025, 11, 27, 19, 0, 0);
+  // Scheduled live time for the test (local time): 04 Jan 2026 19:00
+  const LIVE_TIME = new Date(2026, 0, 4, 19, 0, 0);
 
   let useFirebase = false;
   try{
@@ -175,14 +367,24 @@
   const modalMessage = document.getElementById('modalMessage');
   const modalAction = document.getElementById('modalAction');
   const modalCancel = document.getElementById('modalCancel');
+  let lastFocusedEl = null;
+  function closeModal(){
+    modalBackdrop.style.display = 'none';
+    modalBackdrop.setAttribute('aria-hidden','true');
+    if(lastFocusedEl && typeof lastFocusedEl.focus === 'function') lastFocusedEl.focus();
+  }
 
   function showModal(title, message, actionText, actionFn){
     modalTitle.textContent = title;
     modalMessage.textContent = message;
     modalAction.textContent = actionText || 'OK';
-    modalAction.onclick = ()=>{ modalBackdrop.style.display='none'; actionFn && actionFn(); };
-    modalCancel.onclick = ()=>{ modalBackdrop.style.display='none'; };
+    modalAction.onclick = ()=>{ closeModal(); actionFn && actionFn(); };
+    modalCancel.onclick = ()=>{ closeModal(); };
+    lastFocusedEl = document.activeElement;
     modalBackdrop.style.display = 'flex';
+    modalBackdrop.setAttribute('aria-hidden','false');
+    // focus the action button for keyboard users
+    setTimeout(()=>{ modalAction.focus(); }, 20);
   }
 
   function getAttempts(){
@@ -194,22 +396,27 @@
      Server-side check + fallback
      ========================== */
   async function checkAndLockNumber(mobile){
+    // show overlay while checking
+    showOverlay('Reserving your slot...');
+
     // If firebase is configured -> use Firestore (document per mobile)
     if(useFirebase && window.db){
       try{
         const ref = db.collection('attempts').doc(mobile);
         const snap = await ref.get();
-        if(snap.exists){ return false; }
+        if(snap.exists){ hideOverlay(); showToast('This number is already enrolled', 'error'); return false; }
         await ref.set({ attemptedAt: firebase.firestore.FieldValue.serverTimestamp() });
+        hideOverlay(); showToast('Number reserved — good to go!', 'success');
         return true;
       }catch(e){ console.warn('Firestore check failed, falling back to localStorage', e); }
     }
 
     // Fallback: localStorage per-browser (not device-proof)
     const attempts = getAttempts();
-    if(attempts[mobile]) return false;
+    if(attempts[mobile]){ hideOverlay(); showToast('This number is already enrolled (local)', 'error'); return false; }
     attempts[mobile] = { time: new Date().toISOString() };
     saveAttempts(attempts);
+    hideOverlay(); showToast('Number reserved — good to go!', 'success');
     return true;
   }
 
@@ -247,6 +454,12 @@
     startScreen.style.display = 'none';
     testScreen.style.display = 'none';
     startBtn.disabled = true;
+    // Visual cue for live countdown while waiting
+    if(liveCountdownEl){
+      liveCountdownEl.classList.add('live-countdown','live-pulse');
+    }
+    // ensure panda walks in when showing coming soon
+    try{ animatePandaWalkIn(true); }catch(e){ console.warn('animatePandaWalkIn failed', e); }
   }
 
   function revealStartScreen(){
@@ -255,6 +468,8 @@
     startScreen.style.display = 'block';
     testScreen.style.display = 'none';
     startBtn.disabled = false;
+    // remove live countdown visual cue when the test is available
+    if(liveCountdownEl){ liveCountdownEl.classList.remove('live-countdown','live-pulse'); }
     // ensure header/test timers show default test duration
     const m = Math.floor(totalSeconds/60); const s = totalSeconds%60;
     const txt = `${m}:${s<10?'0':''}${s}`;
@@ -267,14 +482,45 @@
     const liveTs = LIVE_TIME.getTime();
     if(now >= liveTs){ revealStartScreen(); return; }
     showWhileComingSoon();
+
+    function formatParts(sec){
+      let days = Math.floor(sec/86400); sec = sec % 86400;
+      const hrs = Math.floor(sec/3600); sec = sec % 3600;
+      const mins = Math.floor(sec/60); const s = sec % 60;
+      return { days, hrs, mins, s };
+    }
+
+    function renderLive(remainingSec){
+      const p = formatParts(remainingSec);
+      if(!liveCountdownEl) return;
+
+      if(p.days > 0){
+        liveCountdownEl.innerHTML = `<span class="time-chip"><strong>${p.days}</strong>d</span> <span class="time-block"><span class="hh">${String(p.hrs).padStart(2,'0')}</span>:<span class="mm">${String(p.mins).padStart(2,'0')}</span>:<span class="ss">${String(p.s).padStart(2,'0')}</span></span>`;
+      } else {
+        liveCountdownEl.innerHTML = `<span class="time-block large"><span class="hh">${String(p.hrs).padStart(2,'0')}</span>:<span class="mm">${String(p.mins).padStart(2,'0')}</span>:<span class="ss">${String(p.s).padStart(2,'0')}</span></span>`;
+      }
+
+      // animate the seconds unit for a subtle flip/tick
+      const ss = liveCountdownEl.querySelector('.ss');
+      if(ss){
+        gsap.fromTo(ss, {y:-8, opacity:0.6}, {y:0, opacity:1, duration:0.28, ease:'power3.out'});
+      }
+
+      // also update compact header timer text
+      headerTimer.textContent = 'Live in ' + (p.days>0 ? `${p.days}d ${String(p.hrs).padStart(2,'0')}:${String(p.mins).padStart(2,'0')}:${String(p.s).padStart(2,'0')}` : `${String(p.hrs).padStart(2,'0')}:${String(p.mins).padStart(2,'0')}:${String(p.s).padStart(2,'0')}`);
+      timerEl.textContent = headerTimer.textContent;
+    }
+
     function tickLive(){
       const remainingSec = Math.max(0, Math.floor((liveTs - Date.now())/1000));
-      liveCountdownEl.textContent = formatRemainingSeconds(remainingSec);
-      // show compact countdown in header as well
-      headerTimer.textContent = 'Live in ' + formatRemainingSeconds(remainingSec);
-      timerEl.textContent = headerTimer.textContent;
-      if(remainingSec <= 0){ revealStartScreen(); }
+      renderLive(remainingSec);
+      if(remainingSec <= 0){
+        // celebrate with the panda, then reveal the start screen
+        try{ pandaClapAndPoint(); }catch(e){}
+        setTimeout(()=>{ revealStartScreen(); }, 1100);
+      }
     }
+
     tickLive();
     liveInterval = setInterval(tickLive, 1000);
   }
@@ -362,15 +608,264 @@
     window.location.href = SURVEY_URL;
   }
 
+  // Toast & overlay helpers
+  const toastContainer = document.getElementById('toastContainer');
+  function showToast(message, type=''){
+    try{
+      const t = document.createElement('div');
+      t.className = 'toast ' + (type||'');
+      t.setAttribute('role','status');
+      t.textContent = message;
+      toastContainer.appendChild(t);
+      gsap.fromTo(t, {y:-12,opacity:0}, {y:0,opacity:1,duration:0.36,ease:'power2.out'});
+      setTimeout(()=>{ gsap.to(t, {y:-10,opacity:0,duration:0.32,ease:'power2.in', onComplete: ()=> t.remove()}); }, 3400);
+    }catch(e){ console.warn('Toast failed', e); }
+  }
+
+  function showOverlay(message){
+    const ov = document.getElementById('overlay');
+    const msg = document.getElementById('overlayMessage');
+    if(msg) msg.textContent = message || 'Please wait...';
+    ov.setAttribute('aria-hidden','false');
+  }
+  function hideOverlay(){
+    const ov = document.getElementById('overlay');
+    ov.setAttribute('aria-hidden','true');
+  }
+
+  /* ==========================
+     Panda mascot animations
+     ========================== */
+  const pandaWrapperEl = document.getElementById('pandaWrapper');
+  const pandaGroupEl = document.getElementById('pandaGroup');
+  const pandaSpeechEl = document.getElementById('pandaSpeech');
+  function showPandaSpeech(text, ttl=2600){
+    try{
+      if(!pandaSpeechEl) return;
+      // clear previous timeouts and tweens
+      if(pandaSpeechEl._speechTimeout){ clearTimeout(pandaSpeechEl._speechTimeout); pandaSpeechEl._speechTimeout = null; }
+      if(window.gsap) gsap.killTweensOf(pandaSpeechEl);
+
+      pandaSpeechEl.textContent = text || 'Hello! Please wait 😊';
+      pandaSpeechEl.style.display = 'inline-block';
+      pandaSpeechEl.setAttribute('aria-hidden','false');
+
+      if(window.gsap){
+        gsap.fromTo(pandaSpeechEl, {opacity:0, y:-12, scale:0.92}, {opacity:1, y:0, scale:1, duration:0.42, ease:'back.out(1.3)'});
+        pandaSpeechEl._speechTimeout = setTimeout(()=>{
+          gsap.to(pandaSpeechEl, {opacity:0, y:-12, scale:0.92, duration:0.34, ease:'power2.in', onComplete: ()=>{ pandaSpeechEl.setAttribute('aria-hidden','true'); }});
+          pandaSpeechEl._speechTimeout = null;
+        }, ttl);
+      } else {
+        pandaSpeechEl.style.opacity = '1';
+        pandaSpeechEl._speechTimeout = setTimeout(()=>{ pandaSpeechEl.style.opacity = '0'; pandaSpeechEl._speechTimeout = null; }, ttl);
+      }
+    }catch(e){ console.warn('showPandaSpeech failed', e); }
+  }
+
+  function startPandaIdle(){
+    try{
+      if(!pandaWrapperEl) return;
+      pandaWrapperEl.classList.add('panda-breathe');
+      // subtle leg/hip sway loop (works with or without GSAP)
+      const lg = pandaWrapperEl.querySelector('.leg-left');
+      const rg = pandaWrapperEl.querySelector('.leg-right');
+      if(window.gsap){
+        if(lg && rg){ gsap.to([lg,rg], { y:4, duration:0.6, yoyo:true, repeat:-1, ease:'sine.inOut', stagger:0.12 }); }
+      } else {
+        if(lg && rg){ lg.style.transform='translateY(4px)'; rg.style.transform='translateY(4px)'; }
+      }
+      // gentle eye movement + blinking loop
+      const leftP = pandaWrapperEl.querySelector('.pupil-left');
+      const rightP = pandaWrapperEl.querySelector('.pupil-right');
+      if(window.gsap && leftP && rightP){
+        gsap.to([leftP,rightP], { x:2, duration:1.2, yoyo:true, repeat:-1, ease:'sine.inOut' });
+      }
+      // enable blinking every few seconds
+      if(!pandaWrapperEl._blinkInterval){
+        pandaWrapperEl._blinkInterval = setInterval(()=>{
+          try{
+            if(!window.gsap) return;
+            const pL = pandaWrapperEl.querySelector('.pupil-left');
+            const pR = pandaWrapperEl.querySelector('.pupil-right');
+            if(pL && pR){
+              gsap.to([pL,pR], { scaleY: 0.05, transformOrigin: 'center', duration: 0.08, yoyo:true, repeat:1, ease:'power1.inOut' });
+            }
+          }catch(e){ }
+        }, 3600 + Math.floor(Math.random()*2400));
+      }
+      // subtle smile animation (small mouth curve wiggle)
+      const smile = pandaWrapperEl.querySelector('.panda-smile');
+      if(window.gsap && smile){ gsap.to(smile, { rotation: 2, transformOrigin: '60px 44px', duration:1.8, yoyo:true, repeat:-1, ease:'sine.inOut' }); }
+    }catch(e){ console.warn('startPandaIdle failed', e); }
+  }
+
+  function stopPandaIdle(){
+    try{ if(!pandaWrapperEl) return; pandaWrapperEl.classList.remove('panda-breathe'); if(window.gsap) gsap.killTweensOf(pandaWrapperEl); }catch(e){}
+      // No-op update to register stopPandaIdle
+  }
+
+  function animatePandaWalkIn(force){
+    try{
+      if(!pandaWrapperEl) return;
+      if(pandaWrapperEl.dataset.walked && !force){ startPandaIdle(); return; }
+      pandaWrapperEl.dataset.walked = '1';
+      if(!window.gsap){ pandaWrapperEl.style.opacity='1'; pandaWrapperEl.style.transform='translateX(0)'; showPandaSpeech('Hello!'); startPandaIdle(); return; }
+      gsap.set(pandaWrapperEl, { x: -180, opacity: 0, scale: 0.92 });
+      const tl = gsap.timeline();
+      tl.to(pandaWrapperEl, { x: -90, opacity:1, scale:1, duration:0.7, ease:'power2.out' });
+      tl.to(pandaWrapperEl, { x: -40, duration:0.6, ease:'power2.inOut' });
+      tl.to(pandaWrapperEl, { x: 0, duration:0.5, ease:'back.out(1.1)', onComplete: ()=>{
+          try{
+            if(window.gsap && typeof waveAndHandshake === 'function'){
+              waveAndHandshake();
+            } else {
+              showPandaSpeech('Hello! Please wait 😊');
+              startPandaIdle();
+            }
+          }catch(e){ console.warn('walkIn onComplete failed', e); showPandaSpeech('Hello! Please wait 😊'); startPandaIdle(); }
+        } });
+      // add fun bobbing of body during approach
+      tl.to(pandaGroupEl, { y:-10, duration:0.22, yoyo:true, repeat:3, ease:'power1.inOut' }, 0);
+    }catch(e){ console.warn('animatePandaWalkIn failed', e); }
+  }
+
+  function pandaClapAndPoint(){
+    try{
+      if(!pandaWrapperEl || !window.gsap) return;
+      const armL = pandaWrapperEl.querySelector('.arm-left-g');
+      const armR = pandaWrapperEl.querySelector('.arm-right-g');
+      // Clap: bring arms inward quickly
+      const clap = gsap.timeline();
+      clap.to([armL,armR], { x: -6, duration:0.12, yoyo:true, repeat:5, ease:'power1.inOut' })
+          .to([armL,armR], { x:0, duration:0.12, ease:'power1.inOut' });
+      // Point with right arm and nudge the Start button
+      setTimeout(()=>{
+        const startBtnEl = document.getElementById('startBtn');
+        if(armR){ gsap.to(armR, { rotation: -25, transformOrigin:'72px 62px', duration:0.32, ease:'back.out(1.2)' }); }
+        if(startBtnEl){ gsap.fromTo(startBtnEl, { scale:1 }, { scale:1.12, duration:0.28, yoyo:true, repeat:1, ease:'power2.inOut' }); }
+        showPandaSpeech('Ready!');
+      }, 420);
+    }catch(e){ console.warn('pandaClapAndPoint failed', e); }
+  }
+
+  /* Orchestrate a friendly wave then handshake animation */
+  function waveAndHandshake(){
+    try{
+      // Single-arm cute wave using RIGHT arm (lift up then wave)
+      if(!pandaWrapperEl || !window.gsap) return startPandaIdle();
+      const armR = pandaWrapperEl.querySelector('.arm-right-g');
+      if(!armR) return startPandaIdle();
+
+      // Reset tweens on right arm and run an upward cute wave sequence
+      gsap.killTweensOf(armR);
+      const tl = gsap.timeline({ onComplete: ()=>{ startPandaIdle(); } });
+
+      // Lift shoulder (arm group) up and slightly forward
+      tl.to(armR, { rotation: 36, x: 6, transformOrigin: '72px 62px', duration: 0.48, ease: 'power3.out' });
+      // show speech once the arm has lifted a bit
+      tl.call(()=>{ try{ showPandaSpeech('Hello! Please wait 😊', 3200); }catch(e){} }, null, '+=0.06');
+
+      // subtle body/shoulder bob during the wave to make it natural
+      tl.to(pandaGroupEl, { y:-6, duration:0.18, yoyo:true, repeat:6, ease:'sine.inOut' }, '-=0.9');
+
+      // Wrist flicks: target the inner wrist group for natural wrist motion
+      const wrist = armR.querySelector('.arm-right-wrist');
+      if(wrist){
+        gsap.killTweensOf(wrist);
+        tl.to(wrist, { rotation: 18, duration: 0.14, yoyo:true, repeat:7, ease:'sine.inOut' }, '+=0.02');
+      }
+
+      // gentle settle and return shoulder to rest
+      tl.to(armR, { rotation: 8, duration:0.16, ease:'power1.out' });
+      tl.to(armR, { rotation: 0, x:0, duration: 0.48, ease: 'back.out(1.2)' });
+
+    }catch(e){ console.warn('waveAndHandshake failed', e); startPandaIdle(); }
+  }
+
+
+  // Enhance live countdown with subtle GSAP tween
+  (function enhanceCountdown(){
+    const liveCount = document.getElementById('liveCountdown');
+    const headerT = document.getElementById('headerTimer');
+    if(!liveCount) return;
+    // animate number updates smoothly
+    const obs = new MutationObserver((mut)=>{
+      const n = mut[0] && mut[0].target && mut[0].target.textContent;
+      if(!n) return;
+      gsap.fromTo(mut[0].target, {scale:0.96,opacity:0.6}, {scale:1,opacity:1,duration:0.28,ease:'power2.out'});
+      // also update header compact label for clarity (keeps in sync)
+      headerT.textContent = 'Live in ' + n;
+    });
+    obs.observe(liveCount, { characterData:true, childList:true, subtree:true });
+  })();
+
   // Attach events
   startBtn.addEventListener('click', startTestFlow);
   submitBtn.addEventListener('click', ()=> showSubmitConfirm());
+
+  // Flip card interactions (click or keyboard)
+  (function setupFlipCard(){
+    const paperFlip = document.getElementById('paperFlip');
+    const flipInner = document.getElementById('flipInner');
+    const paperImg = document.getElementById('paperImg');
+    const paperWrap = document.getElementById('paperWrap');
+    const paperBack = document.getElementById('paperBack');
+
+    function toggleFlip(show){
+      const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const doFlip = (typeof show === 'boolean') ? show : !flipInner.classList.contains('is-flipped');
+      if(doFlip){
+        flipInner.classList.add('is-flipped');
+        paperFlip.setAttribute('aria-pressed','true');
+        paperBack.setAttribute('aria-hidden','false');
+        showToast('Preview opened', '');
+        if(!reduce){ gsap.to(flipInner, { rotationY: 180, duration: 0.62, ease: 'power2.out' }); }
+      } else {
+        flipInner.classList.remove('is-flipped');
+        paperFlip.setAttribute('aria-pressed','false');
+        paperBack.setAttribute('aria-hidden','true');
+        showToast('Preview closed', '');
+        if(!reduce){ gsap.to(flipInner, { rotationY: 0, duration: 0.5, ease: 'power2.inOut' }); }
+        gsap.to(paperImg, { rotationY:0, rotationX:0, scale:1, duration:0.36, ease:'power3.out' });
+      }
+    }
+
+    if(paperFlip){
+      paperFlip.addEventListener('click', (e)=>{ if(e.target && (e.target.id === 'downloadPaper' || e.target.id === 'flipClose')) return; toggleFlip(); });
+      paperFlip.addEventListener('keydown', (e)=>{ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); toggleFlip(); } });
+    }
+
+    const flipClose = document.getElementById('flipClose');
+    flipClose && flipClose.addEventListener('click', ()=> toggleFlip(false));
+    const downloadPaper = document.getElementById('downloadPaper');
+    downloadPaper && downloadPaper.addEventListener('click', ()=>{
+      const src = paperImg && paperImg.getAttribute('src');
+      if(!src) return showToast('Unable to download', 'error');
+      const a = document.createElement('a'); a.href = src; a.download = 'paper.jpg'; document.body.appendChild(a); a.click(); a.remove();
+      showToast('Download started', 'success');
+    });
+
+    // pointer tilt on front face (disabled when flipped)
+    if(paperWrap && paperImg){
+      paperWrap.addEventListener('pointermove', (ev)=>{
+        if(flipInner.classList.contains('is-flipped')) return;
+        const r = paperWrap.getBoundingClientRect();
+        const px = (ev.clientX - r.left) / r.width - 0.5;
+        const py = (ev.clientY - r.top) / r.height - 0.5;
+        const rotY = px * 10; const rotX = -py * 10;
+        gsap.to(paperImg, { rotationY: rotY, rotationX: rotX, scale:1.02, transformPerspective:800, transformOrigin:'center', duration:0.45, ease:'power1.out' });
+      });
+      paperWrap.addEventListener('pointerleave', ()=>{ if(!flipInner.classList.contains('is-flipped')) gsap.to(paperImg, { rotationY:0, rotationX:0, scale:1, duration:0.55, ease:'power3.out' }); });
+    }
+
+  })();
 
   // allow pressing Enter on mobile input to start
   mobileInput.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') startTestFlow(); });
 
   // accessibility: close modal on Escape
-  document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape'){ document.getElementById('modalBackdrop').style.display='none'; }});
+  document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape'){ closeModal(); }});
 
   // small intro animation on load
   window.addEventListener('load', ()=>{
