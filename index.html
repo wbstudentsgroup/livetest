@@ -58,9 +58,9 @@
     .time-block{font-variant-numeric:tabular-nums;font-size:16px;letter-spacing:0.6px}
     .time-block.large{font-size:18px}
 
-    /* subtle live pulse when waiting */
-    .live-pulse{animation:livePulse 2.8s ease-in-out infinite}
-    @keyframes livePulse{0%{box-shadow:0 8px 18px rgba(11,60,109,0.06)}50%{box-shadow:0 20px 46px rgba(11,60,109,0.12)}100%{box-shadow:0 8px 18px rgba(11,60,109,0.06)}}
+    /* subtle live pulse when waiting — smoother and less 'blink'-like */
+    .live-pulse{animation:livePulse 3.2s ease-in-out infinite; will-change:transform,box-shadow}
+    @keyframes livePulse{0%{transform:scale(1);box-shadow:0 8px 18px rgba(11,60,109,0.06)}50%{transform:scale(1.012);box-shadow:0 14px 34px rgba(11,60,109,0.08)}100%{transform:scale(1);box-shadow:0 8px 18px rgba(11,60,109,0.06)}}
 
     .info{background:linear-gradient(180deg,#f6fbff,#eef6fb);border-radius:12px;padding:14px 16px;margin-bottom:16px;color:#0f3a57}
     .info ul{margin:0;padding-left:18px}
@@ -267,7 +267,7 @@
     <div style="display:flex;gap:10px;justify-content:center;margin-top:8px">
       <button id="startBtn" class="btn-primary" aria-label="Start test">Start Test</button>
     </div>
-    <div class="muted">If you need to test repeatedly for development, clear local storage or use another browser/incognito.</div>
+    <div class="muted"></div>
   </div>
 
   <!-- TEST SCREEN -->
@@ -500,10 +500,10 @@
         liveCountdownEl.innerHTML = `<span class="time-block large"><span class="hh">${String(p.hrs).padStart(2,'0')}</span>:<span class="mm">${String(p.mins).padStart(2,'0')}</span>:<span class="ss">${String(p.s).padStart(2,'0')}</span></span>`;
       }
 
-      // animate the seconds unit for a subtle flip/tick
-      const ss = liveCountdownEl.querySelector('.ss');
-      if(ss){
-        gsap.fromTo(ss, {y:-8, opacity:0.6}, {y:0, opacity:1, duration:0.28, ease:'power3.out'});
+      // smooth slide + fade update for the countdown (gentle, not blink)
+      const block = liveCountdownEl.querySelector('.time-block') || liveCountdownEl;
+      if(block){
+        gsap.fromTo(block, {y:8, opacity:0}, {y:0, opacity:1, duration:0.42, ease:'power3.out', overwrite:true});
       }
 
       // also update compact header timer text
@@ -663,6 +663,9 @@
     }catch(e){ console.warn('showPandaSpeech failed', e); }
   }
 
+  // Short motivational phrases for the panda
+  const PANDA_MOTIVATIONS = ['You got it!','Keep going','Stay calm','Breathe','Nice work','Go for it!','Keep it up','Well done','Almost!','Believe!','You rock!'];
+
   function startPandaIdle(){
     try{
       if(!pandaWrapperEl) return;
@@ -727,6 +730,19 @@
         } });
       // add fun bobbing of body during approach
       tl.to(pandaGroupEl, { y:-10, duration:0.22, yoyo:true, repeat:3, ease:'power1.inOut' }, 0);
+
+      // schedule a short automatic motivational message ~4.5s after walk-in completes
+      try{
+        if(pandaWrapperEl._motivationTimeout){ clearTimeout(pandaWrapperEl._motivationTimeout); pandaWrapperEl._motivationTimeout = null; }
+        pandaWrapperEl._motivationTimeout = setTimeout(()=>{
+          try{
+            const msg = PANDA_MOTIVATIONS[Math.floor(Math.random()*PANDA_MOTIVATIONS.length)];
+            showPandaSpeech(msg, 2200);
+          }catch(e){}
+          pandaWrapperEl._motivationTimeout = null;
+        }, 4500);
+      }catch(e){ console.warn('scheduling walk-in motivation failed', e); }
+
     }catch(e){ console.warn('animatePandaWalkIn failed', e); }
   }
 
@@ -793,7 +809,8 @@
     const obs = new MutationObserver((mut)=>{
       const n = mut[0] && mut[0].target && mut[0].target.textContent;
       if(!n) return;
-      gsap.fromTo(mut[0].target, {scale:0.96,opacity:0.6}, {scale:1,opacity:1,duration:0.28,ease:'power2.out'});
+      // gentle slide+fade rather than a scale 'blink'
+      try{ gsap.fromTo(mut[0].target, {y:6, opacity:0}, {y:0, opacity:1, duration:0.36, ease:'power3.out', overwrite:true}); }catch(e){}
       // also update header compact label for clarity (keeps in sync)
       headerT.textContent = 'Live in ' + n;
     });
@@ -803,6 +820,24 @@
   // Attach events
   startBtn.addEventListener('click', startTestFlow);
   submitBtn.addEventListener('click', ()=> showSubmitConfirm());
+
+  // Panda touch: show immediate motivational message on pointer/click/keyboard
+  try{
+    if(pandaWrapperEl){
+      function pandaMotivateHandler(e){
+        try{
+          if(pandaWrapperEl._cooldown) return;
+          pandaWrapperEl._cooldown = true;
+          setTimeout(()=>{ pandaWrapperEl._cooldown = false; }, 700);
+          const msg = PANDA_MOTIVATIONS[Math.floor(Math.random()*PANDA_MOTIVATIONS.length)];
+          showPandaSpeech(msg, 2200);
+        }catch(err){ console.warn('pandaMotivateHandler failed', err); }
+      }
+      pandaWrapperEl.addEventListener('pointerdown', pandaMotivateHandler);
+      pandaWrapperEl.addEventListener('click', pandaMotivateHandler);
+      pandaWrapperEl.addEventListener('keydown', (ev)=>{ if(ev.key === 'Enter' || ev.key === ' '){ ev.preventDefault(); pandaMotivateHandler(ev); } });
+    }
+  }catch(e){ console.warn('Failed to attach panda interaction', e); }
 
   // Flip card interactions (click or keyboard)
   (function setupFlipCard(){
